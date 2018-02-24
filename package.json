@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ccwq/wgit.git"
+    "url": "https://github.com/ccwq/less2er"
   },
   "author": "ccwq",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/ccwq/wgit/issues"
+    "url": "https://github.com/ccwq/less2er/issues"
   },
-  "homepage": "https://github.com/ccwq/wgit#readme",
+  "homepage": "https://github.com/ccwq/less2er",
   "bin": {
     "less2er": "./index.js"
   },
