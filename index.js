@@ -5,6 +5,10 @@ var exec = require('child_process').exec;
 var path = require("path");
 var _root = process.cwd();
 
+//文件路径，到文件经过除颤的文件编译函数
+var debounceFuncDic = {};
+
+
 
 
 //开始
@@ -14,6 +18,8 @@ globalLessSuccess()
         console.log("执行失败",err);
     })
 ;
+
+
 
 
 /**
@@ -39,11 +45,10 @@ function run(){
         return path.join(_root,_path);
     })
 
-
-
     readDirList(paths,function(filePath,isDir){
         if(isDir)   return;
         if(!/\.less$/.test(filePath)) return;
+
         compile(filePath)
         var wh = fs.watch(filePath,{interval:1000},function(eventType,fileName){
             compile(filePath)
@@ -100,11 +105,22 @@ function npm_install__g_less(){
 }
 
 
+
+function compile(filePath){
+    var debounceFunc = debounceFuncDic[filePath];
+
+    if(!debounceFunc){
+        debounceFuncDic[filePath] = debounceFunc = debounce(510,_compile);
+    }
+
+    debounceFunc(filePath);
+}
+
 /**
  * 执行一次对less的编译
  * @param filePath
  */
-function compile(filePath){
+function _compile(filePath){
     var command = simpleTpl(
         'lessc "{filePath}" "{fileNotExt}.css" --js -x --source-map="{fileNotExt}.css.map"',
         {
@@ -116,8 +132,6 @@ function compile(filePath){
         if (error) console.log(error);
         else {
             console.log("!!!!compile success:" + filePath);
-
-            //console.error(stdout);
         }
     });
 }
@@ -168,3 +182,53 @@ function readDirList(dirlist,handler){
     dirlist.forEach(readDir)
 }
 
+
+/**
+ * 防抖
+ * @param delay
+ * @param no_trailing
+ * @param callback
+ * @param debounce_mode
+ * @returns {wrapper}
+ */
+function throttle( delay, no_trailing, callback, debounce_mode ) {
+    var timeout_id, last_exec = 0;
+    if ( typeof no_trailing !== 'boolean' ) {
+        debounce_mode = callback;  callback = no_trailing;   no_trailing = undefined;
+    }
+    function wrapper() {
+        var that = this, elapsed = +new Date() - last_exec, args = arguments;
+        function exec() {
+            last_exec = +new Date();
+            console.log(callback,999);
+            callback.apply( that, args );
+        };
+        function clear() {
+            timeout_id = undefined;
+        };
+        if ( debounce_mode && !timeout_id ) {
+            exec();
+        }
+        timeout_id && clearTimeout( timeout_id );
+        if ( debounce_mode === undefined && elapsed > delay ) {
+            exec();
+        } else if ( no_trailing !== true ) {
+            timeout_id = setTimeout( debounce_mode ? clear : exec, debounce_mode === undefined ? delay - elapsed : delay );
+        }
+    };
+    return wrapper;
+};
+/**
+ * 节流
+ * @param delay
+ * @param at_begin
+ * @param callback
+ * @returns {*}
+ */
+function debounce( delay, at_begin, callback ) {
+    return callback === undefined?
+        throttle( delay, at_begin, false )
+        :
+        throttle( delay, callback, at_begin !== false )
+    ;
+}
